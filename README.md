@@ -43,14 +43,10 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
 
 ```jsonc
 [
-    // 選択している文字列で rgjf を実行する
-    {
-        "key": "ctrl+alt+f",
-        "command": "workbench.action.terminal.sendSequence",
-        "args": { "text": "rgjf \"${selectedText}\"\u000D" },
-        "when": "editorTextFocus && editorHasSelection"
-    },
-    // 何も選択していないときは、ターミナルに rgjf "" を入れて検索語の入力待ちにする
+    // rgjf 版（結果をファイルで開く）
+    // ターミナルに rgjf "選択した文字列" を入れて止める（Enter は押さない）
+    // オプションや前後の行数を足してから Enter で実行する
+    // 何も選択していないときは rgjf "" が入る
     {
         "key": "ctrl+alt+f",
         "command": "runCommands",
@@ -59,11 +55,11 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
                 "workbench.action.terminal.focus",
                 {
                     "command": "workbench.action.terminal.sendSequence",
-                    "args": { "text": "rgjf \"\"\u001b[D" }
+                    "args": { "text": "rgjf \"${selectedText}\"" }
                 }
             ]
         },
-        "when": "editorTextFocus && !editorHasSelection"
+        "when": "editorTextFocus"
     },
 
     // rgj 版（結果をターミナルに表示する）
@@ -92,7 +88,8 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
 ]
 ```
 
-- `rgjf` 版は結果をファイルで開く。`rgj` 版はターミナルに出すだけなので、軽く確認したいときに使う
+- `rgjf` 版は結果をファイルで開く。オプションを足すことが多いので、実行せずに止める
+- `rgj` 版はターミナルに出すだけ。軽く確認したいときに使うので、選択していればすぐ実行する
 - `\u000D` は Enter、`\u001b[D` はカーソルを1文字左へ動かす（`""` の間に入る）
 - キーは例です。他と重なっていないかは、キーボード ショートカット画面（Ctrl+K Ctrl+S）の「キーの記録」で確認する
 - 選択した文字列に `"` が含まれると、正しく渡りません
