@@ -96,7 +96,10 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
 
 ## VS Code を更新したとき
 
-内蔵 rg のパスに含まれるフォルダ名（コミットハッシュ）が変わります。
+内蔵 rg のパスには、VS Code のコミットハッシュ（`e646868227` のような文字列）のフォルダが含まれます。
+更新でこのフォルダ名が変わると、rg が見つからなくなります。毎回変わるかどうかは確認していません。
+
+ターミナルで `rgj` や `rgjf` を実行して `rg: command not found` が出たら、パスが変わっています。
 PowerShell で次を実行し、`terminal.integrated.env.windows` の `PATH` を書き換えてください。
 
 ```powershell

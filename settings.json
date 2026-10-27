@@ -12,7 +12,7 @@
 //
 // 置き換えが必要な箇所
 //   <USER>              Windows のユーザー名
-//   <COMMIT>            VS Code のフォルダ名（コミットハッシュ。更新で変わる）
+//   <COMMIT>            VS Code のフォルダ名（コミットハッシュ。更新で変わることがある）
 //   <TOMCAT_HOME>       Tomcat のインストール先
 //   <CHECKSTYLE_CONFIG> Checkstyle の設定ファイル
 // =====================================================================
@@ -38,7 +38,7 @@
 
     // ターミナルの PATH の先頭に、VS Code 内蔵の rg.exe があるフォルダを足す
     // rg を別にインストールしなくて済む
-    // <COMMIT> は VS Code を更新すると変わる。そのときは次のコマンド（PowerShell）で探して書き換える
+    // <COMMIT> は VS Code の更新で変わることがある。rg: command not found が出たら次のコマンド（PowerShell）で探して書き換える
     //   Get-ChildItem "$env:LOCALAPPDATA\Programs\Microsoft VS Code" -Recurse -Filter rg.exe -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like '*\@vscode\ripgrep*' } | Select-Object FullName
     // （Copilot 拡張も rg.exe を持っているので、@vscode\ripgrep を含むものを選ぶ）
     "terminal.integrated.env.windows": {
