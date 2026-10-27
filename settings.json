@@ -1,0 +1,100 @@
+// =====================================================================
+// VS Code ユーザー設定（Windows）
+// 置き場所: %APPDATA%\Code\User\settings.json
+//
+// 前提
+//   - Windows 11
+//   - VS Code（ユーザーインストール版。%LOCALAPPDATA%\Programs\Microsoft VS Code）
+//   - Git for Windows（C:\Program Files\Git に入っていること。Git Bash を使う）
+//   - 拡張機能: Java 拡張（Extension Pack for Java）、Checkstyle for Java
+//   - ソースは Shift_JIS と UTF-8 が混在している
+//   - PowerShell のスクリプト実行は禁止されている環境を想定（プロファイルを使わない）
+//
+// 置き換えが必要な箇所
+//   <USER>              Windows のユーザー名
+//   <COMMIT>            VS Code のフォルダ名（コミットハッシュ。更新で変わる）
+//   <TOMCAT_HOME>       Tomcat のインストール先
+//   <CHECKSTYLE_CONFIG> Checkstyle の設定ファイル
+// =====================================================================
+{
+    // ===== Java =====
+
+    // ソースフォルダ外の jar をクラスパスに加える
+    // （Maven/Gradle を使わない Web アプリ。WEB-INF\lib と Tomcat の servlet-api）
+    "java.project.referencedLibraries": [
+        "WEB-INF\\lib\\*.jar",
+        "<TOMCAT_HOME>\\lib\\servlet-api.jar"
+    ],
+
+    // Checkstyle for Java 拡張の設定
+    // version: 使う Checkstyle のバージョン。設定ファイルが対応するものに合わせる
+    // configuration: ルールを書いた xml
+    "java.checkstyle.version": "8.18",
+    "java.checkstyle.configuration": "<CHECKSTYLE_CONFIG>.xml",
+    "java.checkstyle.properties": {},
+    "java.checkstyle.modules": [],
+
+    // ===== ターミナル =====
+
+    // ターミナルの PATH の先頭に、VS Code 内蔵の rg.exe があるフォルダを足す
+    // rg を別にインストールしなくて済む
+    // <COMMIT> は VS Code を更新すると変わる。そのときは次のコマンド（PowerShell）で探して書き換える
+    //   Get-ChildItem "$env:LOCALAPPDATA\Programs\Microsoft VS Code" -Recurse -Filter rg.exe -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like '*\@vscode\ripgrep*' } | Select-Object FullName
+    // （Copilot 拡張も rg.exe を持っているので、@vscode\ripgrep を含むものを選ぶ）
+    "terminal.integrated.env.windows": {
+        "PATH": "C:\\Users\\<USER>\\AppData\\Local\\Programs\\Microsoft VS Code\\<COMMIT>\\resources\\app\\node_modules.asar.unpacked\\@vscode\\ripgrep-universal\\bin\\win32-x64;${env:PATH}"
+    },
+
+    // ターミナルの種類（プロファイル）
+    // PowerShell / Command Prompt / Git Bash は VS Code の既定と同じ内容
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "Git Bash": {
+            "source": "Git Bash",
+            "icon": "terminal-git-bash"
+        },
+
+        // ===== rg 検索（Shift_JIS と UTF-8 の両方を検索） =====
+        // VS Code の検索（Ctrl+Shift+F）は Shift_JIS のファイル内の日本語がヒットしない。
+        // そのため Git Bash に検索用の関数を2つ定義して起動するプロファイルを作る。
+        // 関数は settings.json だけで完結させるため args に1行で書いている（JSON は文字列内で改行できない）。
+        // 読むときは Alt+Z で折り返し表示にする。
+        //
+        // rgj  "検索語"                    ターミナルに結果を表示（引数はそのまま rg に渡る）
+        // rgjf [オプション] "検索語" [行数]  結果を .code-search ファイルにして VS Code で開く
+        //                                  （VS Code の検索結果と同じ形式。行をクリックするとソースへ飛ぶ）
+        //
+        // rgjf のオプション（検索語より前に書く）
+        //   -w          単語単位
+        //   -c          大文字小文字を区別する（既定は区別しない）
+        //   -r          正規表現（既定は文字どおり）
+        //   -i "glob"   含めるファイル（複数回指定可）
+        //   -x "glob"   除外するファイル（複数回指定可）
+        //   行数         一致した行の前後に表示する行数（省略時 0）
+        //
+        // 例: rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
+        // 結果ファイルは rg-日時.code-search としてカレントディレクトリに作られる（溜まるので不要分は手で消す）
+        // 一致箇所の黄色ハイライトは付かない（Ctrl+F で検索語を入れると代わりになる）
+        "Git Bash (rg)": {
+            "path": "C:\\Program Files\\Git\\bin\\bash.exe",
+            "args": ["-c", "rgj() { rg -E sjis \"$@\"; rg \"$@\"; }; rgjf() { local OPTIND=1 o fl= inc= exc= g= s=-i r=-F; while getopts 'wcri:x:' o; do case $o in w) g=\"$g -w\"; fl=\"$fl WordMatch\";; c) s=-s; fl=\"$fl CaseSensitive\";; r) r=; fl=\"$fl RegExp\";; i) g=\"$g -g $OPTARG\"; [ -z \"$inc\" ] && inc=$OPTARG || inc=\"$inc, $OPTARG\";; x) g=\"$g -g !$OPTARG\"; [ -z \"$exc\" ] && exc=$OPTARG || exc=\"$exc, $OPTARG\";; esac; done; shift $((OPTIND-1)); q=$1; c=$2; [ -z \"$c\" ] && c=0; f=rg-$(date +%Y%m%d%H%M%S).code-search; set -f; b=$( { rg -E sjis -n --heading -C \"$c\" $s $r $g -g '!rg-*.code-search' -e \"$q\"; echo; rg -n --heading -C \"$c\" $s $r $g -g '!rg-*.code-search' -e \"$q\"; } | tr -d '\\r' | sed -E 's/^([0-9]+):/\\x20\\x20\\1:\\x20/; t; s/^([0-9]+)-/\\x20\\x20\\1\\x20/; t; /^--$/d; s/^(.+)$/\\1:/' ); set +f; n=$(grep -cE '^[[:space:]]+[0-9]+:' <<< \"$b\"); m=$(grep -c '^[^[:space:]]' <<< \"$b\"); printf '# Query: %s\\n# Flags:%s\\n# Including: %s\\n# Excluding: %s\\n# ContextLines: %s\\n\\n%s 件の結果 - %s ファイル\\n\\n%s\\n' \"$q\" \"$fl\" \"$inc\" \"$exc\" \"$c\" \"$n\" \"$m\" \"$b\" > $f && code $f; }; export -f rgj rgjf; exec /usr/bin/bash --login -i"]
+        }
+    },
+
+    // 新しいターミナルを開いたときに使うプロファイル
+    "terminal.integrated.defaultProfile.windows": "Git Bash (rg)",
+
+    // ターミナルに残す行数（既定 1000）。rgj の結果が多くても遡れるように増やす
+    "terminal.integrated.scrollback": 30000
+}
