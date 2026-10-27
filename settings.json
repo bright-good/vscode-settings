@@ -86,6 +86,7 @@
         // 例: rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
         // 結果ファイルは rg-日時.code-search としてカレントディレクトリに作られる（溜まるので不要分は手で消す）
         // 一致箇所の黄色ハイライトは付かない（Ctrl+F で検索語を入れると代わりになる）
+        // keybindings.json にキーを割り当てると、選択した文字列でそのまま検索できて楽（README 参照）
         "Git Bash (rg)": {
             "path": "C:\\Program Files\\Git\\bin\\bash.exe",
             "args": ["-c", "rgj() { rg -E sjis \"$@\"; rg \"$@\"; }; rgjf() { local OPTIND=1 o fl= inc= exc= g= s=-i r=-F; while getopts 'wcri:x:' o; do case $o in w) g=\"$g -w\"; fl=\"$fl WordMatch\";; c) s=-s; fl=\"$fl CaseSensitive\";; r) r=; fl=\"$fl RegExp\";; i) g=\"$g -g $OPTARG\"; [ -z \"$inc\" ] && inc=$OPTARG || inc=\"$inc, $OPTARG\";; x) g=\"$g -g !$OPTARG\"; [ -z \"$exc\" ] && exc=$OPTARG || exc=\"$exc, $OPTARG\";; esac; done; shift $((OPTIND-1)); q=$1; c=$2; [ -z \"$c\" ] && c=0; f=rg-$(date +%Y%m%d%H%M%S).code-search; set -f; b=$( { rg -E sjis -n --heading -C \"$c\" $s $r $g -g '!rg-*.code-search' -e \"$q\"; echo; rg -n --heading -C \"$c\" $s $r $g -g '!rg-*.code-search' -e \"$q\"; } | tr -d '\\r' | sed -E 's/^([0-9]+):/\\x20\\x20\\1:\\x20/; t; s/^([0-9]+)-/\\x20\\x20\\1\\x20/; t; /^--$/d; s/^(.+)$/\\1:/' ); set +f; n=$(grep -cE '^[[:space:]]+[0-9]+:' <<< \"$b\"); m=$(grep -c '^[^[:space:]]' <<< \"$b\"); printf '# Query: %s\\n# Flags:%s\\n# Including: %s\\n# Excluding: %s\\n# ContextLines: %s\\n\\n%s 件の結果 - %s ファイル\\n\\n%s\\n' \"$q\" \"$fl\" \"$inc\" \"$exc\" \"$c\" \"$n\" \"$m\" \"$b\" > $f && code $f; }; export -f rgj rgjf; exec /usr/bin/bash --login -i"]

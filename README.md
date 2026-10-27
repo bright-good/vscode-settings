@@ -36,6 +36,42 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
 | `-i "glob"` | 含めるファイル（複数回指定可） |
 | `-x "glob"` | 除外するファイル（複数回指定可） |
 
+## キーバインドを設定すると楽
+
+毎回ターミナルで打つより、キー1つで呼べるようにしておくと楽です。
+`keybindings.json`（Ctrl+Shift+P →「基本設定: キーボード ショートカットを開く (JSON)」）に追加します。
+
+```jsonc
+[
+    // 選択している文字列で rgjf を実行する
+    {
+        "key": "ctrl+alt+f",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": { "text": "rgjf \"${selectedText}\"\u000D" },
+        "when": "editorTextFocus && editorHasSelection"
+    },
+    // 何も選択していないときは、ターミナルに rgjf "" を入れて検索語の入力待ちにする
+    {
+        "key": "ctrl+alt+f",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "rgjf \"\"\u001b[D" }
+                }
+            ]
+        },
+        "when": "editorTextFocus && !editorHasSelection"
+    }
+]
+```
+
+- `\u000D` は Enter、`\u001b[D` はカーソルを1文字左へ動かす（`""` の間に入る）
+- キーは例です。他と重なっていないかは、キーボード ショートカット画面（Ctrl+K Ctrl+S）の「キーの記録」で確認する
+- 選択した文字列に `"` が含まれると、正しく渡りません
+
 ## VS Code を更新したとき
 
 内蔵 rg のパスに含まれるフォルダ名（コミットハッシュ）が変わります。
