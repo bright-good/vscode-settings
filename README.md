@@ -64,10 +64,35 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
             ]
         },
         "when": "editorTextFocus && !editorHasSelection"
+    },
+
+    // rgj 版（結果をターミナルに表示する）
+    // 選択している文字列で rgj を実行する
+    {
+        "key": "ctrl+alt+g",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": { "text": "rgj \"${selectedText}\"\u000D" },
+        "when": "editorTextFocus && editorHasSelection"
+    },
+    // 何も選択していないときは、ターミナルに rgj "" を入れて検索語の入力待ちにする
+    {
+        "key": "ctrl+alt+g",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "rgj \"\"\u001b[D" }
+                }
+            ]
+        },
+        "when": "editorTextFocus && !editorHasSelection"
     }
 ]
 ```
 
+- `rgjf` 版は結果をファイルで開く。`rgj` 版はターミナルに出すだけなので、軽く確認したいときに使う
 - `\u000D` は Enter、`\u001b[D` はカーソルを1文字左へ動かす（`""` の間に入る）
 - キーは例です。他と重なっていないかは、キーボード ショートカット画面（Ctrl+K Ctrl+S）の「キーの記録」で確認する
 - 選択した文字列に `"` が含まれると、正しく渡りません
