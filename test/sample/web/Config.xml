@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<Config>
+    <!-- 検索条件 -->
+    <Param Name="foo">1</Param>
+    <Param Name="bar">2</Param>
+</Config>

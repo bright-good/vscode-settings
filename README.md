@@ -49,6 +49,7 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
 ```jsonc
 [
     // rgjf 版（結果をファイルで開く）
+    // 選択しているとき: rgjf "選択した文字列" を入れる
     {
         "key": "ctrl+alt+f",
         "command": "runCommands",
@@ -61,9 +62,25 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
                 }
             ]
         },
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && editorHasSelection"
+    },
+    // 選択していないとき: rgjf "" を入れて、カーソルを "" の間に置く
+    {
+        "key": "ctrl+alt+f",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "rgjf \"\"\u001b[D" }
+                }
+            ]
+        },
+        "when": "editorTextFocus && !editorHasSelection"
     },
     // rgj 版（結果をターミナルに表示する）
+    // 選択しているとき: rgj "選択した文字列" を入れる
     {
         "key": "ctrl+alt+g",
         "command": "runCommands",
@@ -76,15 +93,35 @@ rgjf -w -c -i "*.java" -x "test/**" "p_cnvcf" 2
                 }
             ]
         },
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && editorHasSelection"
+    },
+    // 選択していないとき: rgj "" を入れて、カーソルを "" の間に置く
+    {
+        "key": "ctrl+alt+g",
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.terminal.focus",
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "rgj \"\"\u001b[D" }
+                }
+            ]
+        },
+        "when": "editorTextFocus && !editorHasSelection"
     }
 ]
 ```
 
 - どちらも、ターミナルにコマンドを入れて止める。Enter は押さないので、オプションや行数を足してから自分で実行する
-- 文字列を選択していれば `rgj "選択した文字列"`、選択していなければ `rgj ""` が入る
+- 選択していないときに `${selectedText}` を使うと、変数を解決できないというエラーになる。そのため選択の有無で2つに分けている
+- `\u001b[D` はカーソルを1文字左へ動かす（`""` の間に入る）
 - キーは例です。他と重なっていないかは、キーボード ショートカット画面（Ctrl+K Ctrl+S）の「キーの記録」で確認する
 - 選択した文字列に `"` が含まれると、正しく渡りません
+
+## テスト
+
+`test/sample` に、Shift_JIS と UTF-8 のテスト用ファイルがあります。期待する結果は `test/README.md` に書いています。
 
 ## VS Code を更新したとき
 
